@@ -1,0 +1,18 @@
+[package]
+name = "filecoin-scheduler"
+version = "0.1.0"
+authors = ["石博文 <sbw@sbw.so>"]
+edition = "2018"
+
+[dependencies]
+futures = "*"
+futures-util = "*"
+serde = { version = "*" }
+tarpc = { version = "*", features = ["full"] }
+tokio = { version = "*", features = ["full"] }
+tokio-serde = { version = "*", features = ["json"] }
+once_cell = "*"
+semaphore = "*"
+log = "*"
+env_logger = "*"
+toml = "*"
