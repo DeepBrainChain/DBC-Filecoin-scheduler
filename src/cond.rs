@@ -12,7 +12,7 @@ static SEMAPHORES: Lazy<Mutex<HashMap<String, Semaphore<()>>>> = Lazy::new(|| {
     let mut f = File::open("/etc/filecoin-scheduler.conf").unwrap();
     let mut buf = String::new();
     f.read_to_string(&mut buf).unwrap();
-    
+
     let resources: HashMap<String, usize> = toml::from_str(&buf).unwrap();
     info!("Scheduler started with resources: {:#?}", resources);
 
