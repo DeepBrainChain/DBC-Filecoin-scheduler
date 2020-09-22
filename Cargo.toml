@@ -3,16 +3,23 @@ name = "filecoin-scheduler"
 version = "0.1.0"
 authors = ["石博文 <sbw@sbw.so>"]
 edition = "2018"
+build = "build.rs"
+
+[profile.release]
+lto = true
 
 [dependencies]
-futures = "*"
-futures-util = "*"
-serde = { version = "*" }
-tarpc = { version = "*", features = ["full"] }
-tokio = { version = "*", features = ["full"] }
-tokio-serde = { version = "*", features = ["json"] }
+serde = { version = "*", features = ["derive"] }
 once_cell = "*"
 semaphore = "*"
 log = "*"
 env_logger = "*"
 toml = "*"
+
+# grpc
+grpcio = { version = "*", default-features = false, features = ["protobuf-codec"] }
+protobuf = "*"
+futures = "*"
+
+[build-dependencies]
+protoc-grpcio = "*"

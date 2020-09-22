@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+import "google/protobuf/empty.proto";
+
+package scheduler;
+
+service Scheduler {
+  rpc Test(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc TryAccess(AccessResource) returns (ResourceResult) {}
+}
+
+message AccessResource {
+  required string name = 1;
+}
+
+message ResourceResult {
+  optional int64 token = 1;
+}
