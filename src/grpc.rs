@@ -1,12 +1,15 @@
 use crate::common::*;
-use crate::cond::*;
+use crate::cond;
 use crate::protos::scheduler::*;
 use crate::protos::scheduler_grpc;
 use futures::TryFutureExt;
 use grpcio::{RpcContext, UnarySink};
+use log::*;
 
 impl scheduler_grpc::Scheduler for Scheduler {
     fn test(&mut self, ctx: RpcContext, _req: Empty, sink: UnarySink<Empty>) {
+        cond::show_debug_info();
+
         ctx.spawn(sink.success(Empty::new()).unwrap_or_else(|_| ()))
     }
 
@@ -16,10 +19,36 @@ impl scheduler_grpc::Scheduler for Scheduler {
         req: AccessResource,
         sink: UnarySink<ResourceResult>,
     ) {
-        println!("{:#?}", req);
+        trace!("grpc: Trying to access {:#?}", req);
 
         let mut data = ResourceResult::new();
-        data.set_token(1);
+        if let Some(tok) = cond::try_access(req.get_name()) {
+            data.set_token(tok);
+        }
+
+        let f = sink.success(data).unwrap_or_else(|_| ());
+        ctx.spawn(f)
+    }
+
+    fn remove_guard(&mut self, ctx: RpcContext, req: ResourceToken, sink: UnarySink<ExecResult>) {
+        trace!("grpc: Remove guard {:#?}", req);
+
+        let mut data = ExecResult::new();
+        if let Some(r) = cond::remove_guard(req.get_token()) {
+            data.set_result(r);
+        }
+
+        let f = sink.success(data).unwrap_or_else(|_| ());
+        ctx.spawn(f)
+    }
+
+    fn ping(&mut self, ctx: RpcContext, req: ResourceToken, sink: UnarySink<ExecResult>) {
+        trace!("grpc: Ping token {}", req.get_token());
+
+        let mut data = ExecResult::new();
+        if cond::ping(req.get_token()) {
+            data.set_result(true);
+        }
 
         let f = sink.success(data).unwrap_or_else(|_| ());
         ctx.spawn(f)

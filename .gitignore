@@ -1,3 +1,4 @@
 /target
 .idea/
-src/protos/scheduler*.rs
+src/protos/*.rs
+!src/protos/mod.rs

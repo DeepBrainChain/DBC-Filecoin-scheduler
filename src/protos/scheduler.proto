@@ -5,6 +5,8 @@ package scheduler;
 service Scheduler {
   rpc Test(Empty) returns (Empty) {}
   rpc TryAccess(AccessResource) returns (ResourceResult) {}
+  rpc RemoveGuard(ResourceToken) returns (ExecResult) {}
+  rpc Ping(ResourceToken) returns (ExecResult) {}
 }
 
 message Empty {}
@@ -14,5 +16,13 @@ message AccessResource {
 }
 
 message ResourceResult {
-  optional int64 token = 1;
+  optional uint64 token = 1;
+}
+
+message ResourceToken {
+  required uint64 token = 1;
+}
+
+message ExecResult {
+  required bool result = 1;
 }
