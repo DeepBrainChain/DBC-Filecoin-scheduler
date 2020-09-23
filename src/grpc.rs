@@ -23,7 +23,9 @@ impl scheduler_grpc::Scheduler for Scheduler {
 
         let mut data = ResourceResult::new();
         if let Some(tok) = cond::try_access(req.get_name()) {
-            data.set_token(tok);
+            let mut rtok = ResourceToken::new();
+            rtok.set_token(tok);
+            data.set_token(rtok);
         }
 
         let f = sink.success(data).unwrap_or_else(|_| ());

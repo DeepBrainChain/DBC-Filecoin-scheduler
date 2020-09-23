@@ -16,7 +16,7 @@ message AccessResource {
 }
 
 message ResourceResult {
-  optional uint64 token = 1;
+  optional ResourceToken token = 1;
 }
 
 message ResourceToken {
