@@ -1,13 +1,13 @@
 syntax = "proto2";
 
-import "google/protobuf/empty.proto";
-
 package scheduler;
 
 service Scheduler {
-  rpc Test(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Test(Empty) returns (Empty) {}
   rpc TryAccess(AccessResource) returns (ResourceResult) {}
 }
+
+message Empty {}
 
 message AccessResource {
   required string name = 1;

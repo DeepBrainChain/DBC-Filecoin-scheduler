@@ -17,7 +17,7 @@ env_logger = "*"
 toml = "*"
 
 # grpc
-grpcio = { version = "*", default-features = false, features = ["protobuf-codec"] }
+grpcio = { version = "*" }
 protobuf = "*"
 futures = "*"
 

@@ -4,7 +4,6 @@ use crate::protos::scheduler::*;
 use crate::protos::scheduler_grpc;
 use futures::TryFutureExt;
 use grpcio::{RpcContext, UnarySink};
-use protobuf::well_known_types::Empty;
 
 impl scheduler_grpc::Scheduler for Scheduler {
     fn test(&mut self, ctx: RpcContext, _req: Empty, sink: UnarySink<Empty>) {
