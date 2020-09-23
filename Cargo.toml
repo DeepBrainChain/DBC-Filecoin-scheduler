@@ -22,7 +22,7 @@ once_cell = "*"
 semaphore = "*"
 log = "*"
 env_logger = "*"
-toml = "*"
+serde_yaml = "*"
 
 # grpc
 grpcio = { version = "*" }

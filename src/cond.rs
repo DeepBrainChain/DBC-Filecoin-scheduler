@@ -1,10 +1,9 @@
+use crate::config::{Config, PhaseConfig};
 use log::*;
 use once_cell::sync::Lazy;
 use semaphore::{Semaphore, SemaphoreGuard, TryAccessError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::Read;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
@@ -15,16 +14,12 @@ static CONFIG_FILE: &'static str = "/etc/filecoin-scheduler.conf";
 static CONFIG_FILE: &'static str = "C:\\Users\\s3253\\filecoin-scheduler.yaml";
 
 static SEMAPHORES: Lazy<Mutex<HashMap<String, SemaphoreData>>> = Lazy::new(|| {
-    let mut f = File::open(CONFIG_FILE).unwrap();
-    let mut buf = String::new();
-    f.read_to_string(&mut buf).unwrap();
-
-    let resources: HashMap<String, usize> = toml::from_str(&buf).unwrap();
-    info!("Scheduler started with resources: {:#?}", resources);
+    let config = Config::from_config(CONFIG_FILE);
+    info!("Scheduler started with config: {:#?}", config);
 
     let mut map = HashMap::new();
-    for (k, v) in resources {
-        map.insert(k, SemaphoreData::new(Semaphore::new(v, ())));
+    for phase in config.phases {
+        map.insert(phase.name.clone(), SemaphoreData::new(&phase));
     }
 
     Mutex::new(map)
@@ -38,13 +33,17 @@ static COUNTER: AtomicU64 = AtomicU64::new(0);
 struct SemaphoreData {
     semaphore: Semaphore<()>,
     last_check: Instant,
+    check_timeout: u64,
+    dead_timeout: u64,
 }
 
 impl SemaphoreData {
-    fn new(semaphore: Semaphore<()>) -> Self {
+    fn new(config: &PhaseConfig) -> Self {
         Self {
-            semaphore,
+            semaphore: Semaphore::new(config.concurrent_limit as usize, ()),
             last_check: Instant::now(),
+            check_timeout: config.check_timeout,
+            dead_timeout: config.dead_timeout,
         }
     }
 }
@@ -87,15 +86,10 @@ pub(crate) fn remove_guard(token: u64) -> Option<bool> {
 pub(crate) fn try_access<T: AsRef<str>>(name: T) -> Option<u64> {
     debug!("try_access: {}", name.as_ref());
 
-    let sem_val = {
-        let semaphores = SEMAPHORES.lock().unwrap();
-        semaphores
-            .get(&name.as_ref().to_owned())?
-            .semaphore
-            .try_access()
-    };
+    let mut semaphores = SEMAPHORES.lock().unwrap();
+    let sem_data = semaphores.get_mut(&name.as_ref().to_owned())?;
 
-    match sem_val {
+    match sem_data.semaphore.try_access() {
         Ok(guard) => {
             let token = COUNTER.fetch_add(1, Ordering::SeqCst);
             SEMAPHORE_GUARDS
@@ -108,6 +102,23 @@ pub(crate) fn try_access<T: AsRef<str>>(name: T) -> Option<u64> {
         }
         Err(TryAccessError::NoCapacity) => {
             debug!("{} is not available", name.as_ref());
+
+            // check timeout
+            if sem_data.last_check.elapsed().as_secs() > sem_data.check_timeout {
+                debug!("it's time to check dead guards");
+                sem_data.last_check = Instant::now();
+
+                // remove dead guards
+                SEMAPHORE_GUARDS.lock().unwrap().retain(|tok, guard| {
+                    let secs = guard.last_live.elapsed().as_secs();
+                    if secs > sem_data.dead_timeout {
+                        warn!("Token {} has {} secs not active, force removed.", tok, secs);
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
             return None;
         }
         Err(TryAccessError::Shutdown) => panic!("Semaphore is shutdown!!!"),

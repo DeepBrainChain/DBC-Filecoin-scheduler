@@ -1,8 +1,10 @@
 mod common;
 mod cond;
+mod config;
 mod grpc;
 mod protos;
 
+use config::Config;
 use futures::channel::oneshot;
 use futures::executor::block_on;
 use grpcio::{Environment, ServerBuilder};
@@ -13,6 +15,9 @@ use std::{io, thread};
 
 fn main() {
     env_logger::init();
+
+    let config = Config::default();
+    debug!("\n{}", serde_yaml::to_string(&config).unwrap());
 
     let service = protos::scheduler_grpc::create_scheduler(common::Scheduler);
     let env = Arc::new(Environment::new(5));

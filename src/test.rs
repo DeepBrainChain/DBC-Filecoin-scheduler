@@ -1,5 +1,6 @@
 mod common;
 mod cond;
+mod config;
 mod grpc;
 mod protos;
 
@@ -10,6 +11,10 @@ use protos::scheduler_grpc::SchedulerClient;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+
+fn fake_p1() {
+    thread::sleep(Duration::from_secs(30));
+}
 
 fn main() {
     env_logger::init();
