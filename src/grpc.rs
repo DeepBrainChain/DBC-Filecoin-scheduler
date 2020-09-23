@@ -19,7 +19,7 @@ impl scheduler_grpc::Scheduler for Scheduler {
         req: AccessResource,
         sink: UnarySink<ResourceResult>,
     ) {
-        trace!("grpc: Trying to access {:#?}", req);
+        trace!("grpc: Trying to access {}", req.get_name());
 
         let mut data = ResourceResult::new();
         if let Some(tok) = cond::try_access(req.get_name()) {
@@ -31,7 +31,7 @@ impl scheduler_grpc::Scheduler for Scheduler {
     }
 
     fn remove_guard(&mut self, ctx: RpcContext, req: ResourceToken, sink: UnarySink<ExecResult>) {
-        trace!("grpc: Remove guard {:#?}", req);
+        trace!("grpc: Remove guard {:?}", req);
 
         let mut data = ExecResult::new();
         if let Some(r) = cond::remove_guard(req.get_token()) {

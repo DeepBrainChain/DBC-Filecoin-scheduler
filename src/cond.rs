@@ -9,8 +9,13 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
-static SEMAPHORES: Lazy<Mutex<HashMap<String, Semaphore<()>>>> = Lazy::new(|| {
-    let mut f = File::open("/etc/filecoin-scheduler.conf").unwrap();
+#[cfg(target_os = "linux")]
+static CONFIG_FILE: &'static str = "/etc/filecoin-scheduler.conf";
+#[cfg(target_os = "windows")]
+static CONFIG_FILE: &'static str = "C:\\Users\\s3253\\filecoin-scheduler.yaml";
+
+static SEMAPHORES: Lazy<Mutex<HashMap<String, SemaphoreData>>> = Lazy::new(|| {
+    let mut f = File::open(CONFIG_FILE).unwrap();
     let mut buf = String::new();
     f.read_to_string(&mut buf).unwrap();
 
@@ -19,7 +24,7 @@ static SEMAPHORES: Lazy<Mutex<HashMap<String, Semaphore<()>>>> = Lazy::new(|| {
 
     let mut map = HashMap::new();
     for (k, v) in resources {
-        map.insert(k, Semaphore::new(v, ()));
+        map.insert(k, SemaphoreData::new(Semaphore::new(v, ())));
     }
 
     Mutex::new(map)
@@ -29,6 +34,20 @@ static SEMAPHORE_GUARDS: Lazy<Mutex<HashMap<u64, GuardData>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
+
+struct SemaphoreData {
+    semaphore: Semaphore<()>,
+    last_check: Instant,
+}
+
+impl SemaphoreData {
+    fn new(semaphore: Semaphore<()>) -> Self {
+        Self {
+            semaphore,
+            last_check: Instant::now(),
+        }
+    }
+}
 
 struct GuardData {
     _guard: SemaphoreGuard<()>,
@@ -70,7 +89,10 @@ pub(crate) fn try_access<T: AsRef<str>>(name: T) -> Option<u64> {
 
     let sem_val = {
         let semaphores = SEMAPHORES.lock().unwrap();
-        semaphores.get(&name.as_ref().to_owned())?.try_access()
+        semaphores
+            .get(&name.as_ref().to_owned())?
+            .semaphore
+            .try_access()
     };
 
     match sem_val {
@@ -102,10 +124,17 @@ pub(crate) fn ping(token: u64) -> bool {
 }
 
 pub(crate) fn show_debug_info() {
-    let semaphores = SEMAPHORE_GUARDS.lock().unwrap();
+    debug!("SEMAPHORE_DATA:");
+    for (name, data) in SEMAPHORES.lock().unwrap().iter() {
+        debug!(
+            "name: {}, last_check: {}s",
+            name,
+            data.last_check.elapsed().as_secs()
+        );
+    }
 
     debug!("SEMAPHORE_GUARDS:");
-    for (token, guard) in semaphores.iter() {
+    for (token, guard) in SEMAPHORE_GUARDS.lock().unwrap().iter() {
         debug!(
             "token: {}, guard: {}, last_instant: {}s",
             token,
