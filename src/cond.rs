@@ -84,7 +84,7 @@ pub(crate) fn remove_guard(token: u64) -> Option<bool> {
 }
 
 pub(crate) fn try_access<T: AsRef<str>>(name: T) -> Option<u64> {
-    debug!("try_access: {}", name.as_ref());
+    trace!("try_access: {}", name.as_ref());
 
     let mut semaphores = SEMAPHORES.lock().unwrap();
     let sem_data = semaphores.get_mut(&name.as_ref().to_owned())?;

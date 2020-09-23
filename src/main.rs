@@ -14,6 +14,14 @@ use std::sync::Arc;
 use std::{io, thread};
 
 fn main() {
+    if std::env::var("RUST_LOG").is_err() {
+        if cfg!(debug_assertions) {
+            std::env::set_var("RUST_LOG", "trace");
+        } else {
+            std::env::set_var("RUST_LOG", "debug");
+        }
+    }
+
     env_logger::init();
 
     let config = Config::default();
@@ -23,7 +31,7 @@ fn main() {
     let env = Arc::new(Environment::new(5));
     let mut server = ServerBuilder::new(env)
         .register_service(service)
-        .bind("0.0.0.0", 3000)
+        .bind("localhost", 3000)
         .build()
         .unwrap();
     server.start();

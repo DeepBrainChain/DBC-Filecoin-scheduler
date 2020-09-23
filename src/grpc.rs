@@ -19,10 +19,14 @@ impl scheduler_grpc::Scheduler for Scheduler {
         req: AccessResource,
         sink: UnarySink<ResourceResult>,
     ) {
-        trace!("grpc: Trying to access {}", req.get_name());
+        debug!(
+            "grpc: {} trying to access {}",
+            req.get_name(),
+            req.get_request_resource()
+        );
 
         let mut data = ResourceResult::new();
-        if let Some(tok) = cond::try_access(req.get_name()) {
+        if let Some(tok) = cond::try_access(req.get_request_resource()) {
             let mut rtok = ResourceToken::new();
             rtok.set_token(tok);
             data.set_token(rtok);

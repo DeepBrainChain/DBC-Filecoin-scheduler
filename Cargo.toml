@@ -23,6 +23,7 @@ semaphore = "*"
 log = "*"
 env_logger = "*"
 serde_yaml = "*"
+failure = "*"
 
 # grpc
 grpcio = { version = "*" }

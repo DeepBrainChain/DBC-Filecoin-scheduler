@@ -18,15 +18,17 @@ pub struct Config {
 
 impl Config {
     pub fn from_config<T: AsRef<Path>>(config: T) -> Self {
-        let f = File::open(&config).unwrap();
-        serde_yaml::from_reader(f).unwrap_or_else(|e| {
-            warn!(
-                "Load config {} failed: {}, use default settings",
-                config.as_ref().display(),
-                e
-            );
-            Config::default()
-        })
+        File::open(&config)
+            .map_err(|e| e.into())
+            .and_then(|f| serde_yaml::from_reader(f).map_err(|e| e.into()))
+            .unwrap_or_else(|e: failure::Error| {
+                warn!(
+                    "Load config {} failed: {}, use default settings",
+                    config.as_ref().display(),
+                    e
+                );
+                Config::default()
+            })
     }
 }
 
@@ -34,9 +36,9 @@ impl std::default::Default for Config {
     fn default() -> Self {
         let p1 = PhaseConfig {
             name: "P1".to_string(),
-            concurrent_limit: 1,
-            check_timeout: 1000,
-            dead_timeout: 1000,
+            concurrent_limit: 2,
+            check_timeout: 8,
+            dead_timeout: 20,
         };
         let p2 = PhaseConfig {
             name: "P2".to_string(),
