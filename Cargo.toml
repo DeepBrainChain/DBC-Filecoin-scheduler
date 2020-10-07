@@ -32,9 +32,9 @@ serde_yaml = "*"
 failure = "*"
 
 # grpc
-grpcio = { version = "*" }
-protobuf = "*"
-futures = "*"
+grpcio = { version = "*", features = ["openssl"] }
+protobuf = "^2.0"
+futures = "^0.3"
 
 [build-dependencies]
 protoc-grpcio = "*"
