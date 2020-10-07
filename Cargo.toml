@@ -8,13 +8,19 @@ build = "build.rs"
 [profile.release]
 lto = true
 
+[lib]
+crate-type = ["rlib"]
+name = "filecoin_scheduler"
+path = "src/lib.rs"
+edition = "2018"
+
 [[bin]]
 name = "filecoin-scheduler"
 path = "src/main.rs"
 
-[[bin]]
-name = "grpc-test"
-path = "src/test.rs"
+#[[bin]]
+#name = "grpc-test"
+#path = "src/test.rs"
 
 [dependencies]
 serde = { version = "*", features = ["derive"] }
