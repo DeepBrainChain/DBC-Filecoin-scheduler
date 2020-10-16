@@ -2,3 +2,4 @@
 .idea/
 src/protos/*.rs
 !src/protos/mod.rs
+config.yaml

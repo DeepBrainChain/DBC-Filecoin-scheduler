@@ -30,6 +30,7 @@ log = "*"
 env_logger = "*"
 serde_yaml = "*"
 failure = "*"
+clap = "*"
 
 # grpc
 grpcio = { version = "^0.6", features = ["openssl"] }

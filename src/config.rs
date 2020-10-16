@@ -14,6 +14,8 @@ pub struct PhaseConfig {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub phases: Vec<PhaseConfig>,
+    pub bind_host: String,
+    pub bind_port: u16,
 }
 
 impl Config {
@@ -61,6 +63,8 @@ impl std::default::Default for Config {
 
         Self {
             phases: vec![p1, p2, c1, c2],
+            bind_host: "localhost".to_owned(),
+            bind_port: 3000,
         }
     }
 }
