@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use std::time::Instant;
 
 #[cfg(target_os = "linux")]
-static CONFIG_FILE: &'static str = "/etc/filecoin-scheduler.conf";
+static CONFIG_FILE: &'static str = "/etc/filecoin-scheduler.yaml";
 #[cfg(target_os = "windows")]
 static CONFIG_FILE: &'static str = "C:\\Users\\s3253\\filecoin-scheduler.yaml";
 
