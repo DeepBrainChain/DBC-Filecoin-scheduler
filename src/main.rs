@@ -6,13 +6,23 @@ mod protos;
 
 use clap::App;
 // use config::Config;
-use futures::channel::oneshot;
+use failure::_core::pin::Pin;
+use failure::_core::task::{Context, Poll};
 use futures::executor::block_on;
+use futures::Future;
 use grpcio::{Environment, ServerBuilder};
 use log::*;
-use std::io::Read;
 use std::sync::Arc;
-use std::{io, thread};
+
+struct Pending;
+
+impl Future for Pending {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
+        Poll::Pending
+    }
+}
 
 fn main() {
     let _m = App::new("filecoin-scheduler")
@@ -55,12 +65,12 @@ fn main() {
         info!("listen: {}:{}", host, port);
     }
 
-    let (tx, rx) = oneshot::channel();
-    thread::spawn(move || {
-        info!("Press ENTER to exit...");
-        let _ = io::stdin().read(&mut [0]).unwrap();
-        tx.send(())
-    });
-    let _ = block_on(rx);
-    let _ = block_on(server.shutdown());
+    // let (tx, rx) = oneshot::channel();
+    // thread::spawn(move || {
+    //     info!("Press ENTER to exit...");
+    //     let _ = io::stdin().read(&mut [0]).unwrap();
+    //     tx.send(())
+    // });
+    // let _ = block_on(rx);
+    let _ = block_on(Pending);
 }
